@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { Keyboard } from '../lib/client/api';
 import { browserTest as test, expect } from './config/browserTest';
 
 test('should create new page', async function({browser}) {
@@ -28,6 +29,18 @@ test('should create new page', async function({browser}) {
 
   await page2.close();
   expect(browser.contexts().length).toBe(0);
+});
+
+test.only('should verify keyboard.imeSetComposition', async function({browser}) {
+  const page = await browser.newPage();
+  expect(browser.contexts().length).toBe(1);
+  await page.goto('https://w3c.github.io/uievents/tools/key-event-viewer-ce.html');
+
+  await page.keyboard.insertText('a');
+
+  await page.keyboard.imeSetComposition('あ', 1, 1, 'a', 0, 0);
+
+  await page.type('#input', "Hello world!", { delay: 1000 });
 });
 
 test('should throw upon second create new page', async function({browser}) {
