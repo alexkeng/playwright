@@ -36,11 +36,12 @@ test.only('should verify keyboard.imeSetComposition', async function({browser}) 
   expect(browser.contexts().length).toBe(1);
   await page.goto('https://w3c.github.io/uievents/tools/key-event-viewer-ce.html');
 
-  await page.keyboard.insertText('a');
-
   await page.keyboard.imeSetComposition('あ', 1, 1, 'a', 0, 0);
+  await page.keyboard.imeSetComposition('ああ', 2, 2, 'a', 0, 0);
+  await page.keyboard.insertText('ああ');
+  //await page.keyboard.imeCommitComposition('あ');
 
-  await page.type('#input', "Hello world!", { delay: 1000 });
+  await page.type('#input', "Hello!", { delay: 500 });
 });
 
 test('should throw upon second create new page', async function({browser}) {
