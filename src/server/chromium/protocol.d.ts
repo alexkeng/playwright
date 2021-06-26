@@ -923,6 +923,11 @@ add a new optional field to this type.
       navigatorUserAgentIssueDetails?: NavigatorUserAgentIssueDetails;
     }
     /**
+     * A unique id for a DevTools inspector issue. Allows other entities (e.g.
+exceptions, CDP message, console messages, etc.) to reference an issue.
+     */
+    export type IssueId = string;
+    /**
      * An inspector issue reported from the back-end.
      */
     export interface InspectorIssue {
@@ -932,7 +937,7 @@ add a new optional field to this type.
        * A unique id for this issue. May be omitted if no other entity (e.g.
 exception, CDP message, etc.) is referencing this issue.
        */
-      issueId?: string;
+      issueId?: IssueId;
     }
     
     export type issueAddedPayload = {
@@ -1612,7 +1617,9 @@ inspector" rules), "regular" for regular stylesheets.
        */
       frameId: Page.FrameId;
       /**
-       * Stylesheet resource URL.
+       * Stylesheet resource URL. Empty if this is a constructed stylesheet created using
+new CSSStyleSheet() (but non-empty if this is a constructed sylesheet imported
+as a CSS module script).
        */
       sourceURL: string;
       /**
@@ -1652,7 +1659,8 @@ Constructed stylesheets (new CSSStyleSheet()) are mutable immediately after crea
        */
       isMutable: boolean;
       /**
-       * Whether this stylesheet is a constructed stylesheet (created using new CSSStyleSheet()).
+       * True if this stylesheet is created through new CSSStyleSheet() or imported as a
+CSS module script.
        */
       isConstructed: boolean;
       /**
@@ -6027,6 +6035,53 @@ for example an emoji keyboard or an IME.
     export type insertTextReturnValue = {
     }
     /**
+     * This method sets the current candidate text for ime.
+Use imeCommitComposition to commit the final text.
+     */
+    export type imeSetCompositionParameters = {
+      /**
+       * The text to insert
+       */
+      text: string;
+      /**
+       * selection start
+       */
+      selection_start: number;
+      /**
+       * selection end
+       */
+      selection_end: number;
+      /**
+       * key that triggers composition
+       */
+      trigger_key: string;
+      /**
+       * replacement start
+       */
+      replacement_start?: number;
+      /**
+       * replacement end
+       */
+      replacement_end?: number;
+    }
+    export type imeSetCompositionReturnValue = {
+    }
+    /**
+     * This method commits the current candidate text for ime
+     */
+    export type imeCommitCompositionParameters = {
+      /**
+       * the text to commit
+       */
+      text: string;
+      /**
+       * key to trigger end of composition
+       */
+      trigger_key?: string;
+    }
+    export type imeCommitCompositionReturnValue = {
+    }
+    /**
      * Dispatches a mouse event to the page.
      */
     export type dispatchMouseEventParameters = {
@@ -9705,6 +9760,14 @@ Backend then generates 'inspectNodeRequested' event upon element selection.
      * Indicates whether a frame has been identified as an ad.
      */
     export type AdFrameType = "none"|"child"|"root";
+    export type AdFrameExplanation = "ParentIsAd"|"CreatedByAdScript"|"MatchedBlockingRule";
+    /**
+     * Indicates whether a frame has been identified as an ad and why.
+     */
+    export interface AdFrameStatus {
+      adFrameType: AdFrameType;
+      explanations?: AdFrameExplanation[];
+    }
     /**
      * Indicates whether the frame is a secure context and why it is the case.
      */
@@ -9718,7 +9781,7 @@ Backend then generates 'inspectNodeRequested' event upon element selection.
      * All Permissions Policy features. This enum should match the one defined
 in third_party/blink/renderer/core/permissions_policy/permissions_policy_features.json5.
      */
-    export type PermissionsPolicyFeature = "accelerometer"|"ambient-light-sensor"|"attribution-reporting"|"autoplay"|"camera"|"ch-dpr"|"ch-device-memory"|"ch-downlink"|"ch-ect"|"ch-lang"|"ch-prefers-color-scheme"|"ch-rtt"|"ch-ua"|"ch-ua-arch"|"ch-ua-platform"|"ch-ua-model"|"ch-ua-mobile"|"ch-ua-full-version"|"ch-ua-platform-version"|"ch-viewport-width"|"ch-width"|"clipboard-read"|"clipboard-write"|"cross-origin-isolated"|"direct-sockets"|"display-capture"|"document-domain"|"encrypted-media"|"execution-while-out-of-viewport"|"execution-while-not-rendered"|"focus-without-user-activation"|"fullscreen"|"frobulate"|"gamepad"|"geolocation"|"gyroscope"|"hid"|"idle-detection"|"interest-cohort"|"magnetometer"|"microphone"|"midi"|"otp-credentials"|"payment"|"picture-in-picture"|"publickey-credentials-get"|"screen-wake-lock"|"serial"|"shared-autofill"|"storage-access-api"|"sync-xhr"|"trust-token-redemption"|"usb"|"vertical-scroll"|"web-share"|"window-placement"|"xr-spatial-tracking";
+    export type PermissionsPolicyFeature = "accelerometer"|"ambient-light-sensor"|"attribution-reporting"|"autoplay"|"camera"|"ch-dpr"|"ch-device-memory"|"ch-downlink"|"ch-ect"|"ch-lang"|"ch-prefers-color-scheme"|"ch-rtt"|"ch-ua"|"ch-ua-arch"|"ch-ua-bitness"|"ch-ua-platform"|"ch-ua-model"|"ch-ua-mobile"|"ch-ua-full-version"|"ch-ua-platform-version"|"ch-viewport-width"|"ch-width"|"clipboard-read"|"clipboard-write"|"cross-origin-isolated"|"direct-sockets"|"display-capture"|"document-domain"|"encrypted-media"|"execution-while-out-of-viewport"|"execution-while-not-rendered"|"focus-without-user-activation"|"fullscreen"|"frobulate"|"gamepad"|"geolocation"|"gyroscope"|"hid"|"idle-detection"|"interest-cohort"|"magnetometer"|"microphone"|"midi"|"otp-credentials"|"payment"|"picture-in-picture"|"publickey-credentials-get"|"screen-wake-lock"|"serial"|"shared-autofill"|"storage-access-api"|"sync-xhr"|"trust-token-redemption"|"usb"|"vertical-scroll"|"web-share"|"window-placement"|"xr-spatial-tracking";
     /**
      * Reason for a permissions policy feature to be disabled.
      */
@@ -9812,9 +9875,9 @@ Example URLs: http://www.google.com/file.html -> "google.com"
        */
       unreachableUrl?: string;
       /**
-       * Indicates whether this frame was tagged as an ad.
+       * Indicates whether this frame was tagged as an ad and why.
        */
-      adFrameType?: AdFrameType;
+      adFrameStatus?: AdFrameStatus;
       /**
        * Indicates whether the main document is a secure context and explains why that is the case.
        */
@@ -10174,7 +10237,7 @@ Example URLs: http://www.google.com/file.html -> "google.com"
     /**
      * List of not restored reasons for back-forward cache.
      */
-    export type BackForwardCacheNotRestoredReason = "NotMainFrame"|"BackForwardCacheDisabled"|"RelatedActiveContentsExist"|"HTTPStatusNotOK"|"SchemeNotHTTPOrHTTPS"|"Loading"|"WasGrantedMediaAccess"|"DisableForRenderFrameHostCalled"|"DomainNotAllowed"|"HTTPMethodNotGET"|"SubframeIsNavigating"|"Timeout"|"CacheLimit"|"JavaScriptExecution"|"RendererProcessKilled"|"RendererProcessCrashed"|"GrantedMediaStreamAccess"|"SchedulerTrackedFeatureUsed"|"ConflictingBrowsingInstance"|"CacheFlushed"|"ServiceWorkerVersionActivation"|"SessionRestored"|"ServiceWorkerPostMessage"|"EnteredBackForwardCacheBeforeServiceWorkerHostAdded"|"RenderFrameHostReused_SameSite"|"RenderFrameHostReused_CrossSite"|"ServiceWorkerClaim"|"IgnoreEventAndEvict"|"HaveInnerContents"|"TimeoutPuttingInCache"|"BackForwardCacheDisabledByLowMemory"|"BackForwardCacheDisabledByCommandLine"|"NetworkRequestDatapipeDrainedAsBytesConsumer"|"NetworkRequestRedirected"|"NetworkRequestTimeout"|"NetworkExceedsBufferLimit"|"NavigationCancelledWhileRestoring"|"NotMostRecentNavigationEntry"|"BackForwardCacheDisabledForPrerender"|"UserAgentOverrideDiffers"|"ForegroundCacheLimit"|"BrowsingInstanceNotSwapped"|"BackForwardCacheDisabledForDelegate"|"OptInUnloadHeaderNotPresent"|"UnloadHandlerExistsInMainFrame"|"UnloadHandlerExistsInSubFrame"|"WebSocket"|"WebRTC"|"MainResourceHasCacheControlNoStore"|"MainResourceHasCacheControlNoCache"|"SubresourceHasCacheControlNoStore"|"SubresourceHasCacheControlNoCache"|"PageShowEventListener"|"PageHideEventListener"|"BeforeUnloadEventListener"|"UnloadEventListener"|"FreezeEventListener"|"ResumeEventListener"|"ContainsPlugins"|"DocumentLoaded"|"DedicatedWorkerOrWorklet"|"OutstandingNetworkRequestOthers"|"OutstandingIndexedDBTransaction"|"RequestedGeolocationPermission"|"RequestedNotificationsPermission"|"RequestedMIDIPermission"|"RequestedAudioCapturePermission"|"RequestedVideoCapturePermission"|"RequestedBackForwardCacheBlockedSensors"|"RequestedBackgroundWorkPermission"|"BroadcastChannel"|"IndexedDBConnection"|"WebVR"|"WebXR"|"SharedWorker"|"WebLocks"|"WebHID"|"WebShare"|"RequestedStorageAccessGrant"|"WebNfc"|"WebFileSystem"|"OutstandingNetworkRequestFetch"|"OutstandingNetworkRequestXHR"|"AppBanner"|"Printing"|"WebDatabase"|"PictureInPicture"|"Portal"|"SpeechRecognizer"|"IdleManager"|"PaymentManager"|"SpeechSynthesis"|"KeyboardLock"|"WebOTPService"|"OutstandingNetworkRequestDirectSocket"|"IsolatedWorldScript"|"InjectedStyleSheet"|"MediaSessionImplOnServiceCreated"|"Unknown";
+    export type BackForwardCacheNotRestoredReason = "NotMainFrame"|"BackForwardCacheDisabled"|"RelatedActiveContentsExist"|"HTTPStatusNotOK"|"SchemeNotHTTPOrHTTPS"|"Loading"|"WasGrantedMediaAccess"|"DisableForRenderFrameHostCalled"|"DomainNotAllowed"|"HTTPMethodNotGET"|"SubframeIsNavigating"|"Timeout"|"CacheLimit"|"JavaScriptExecution"|"RendererProcessKilled"|"RendererProcessCrashed"|"GrantedMediaStreamAccess"|"SchedulerTrackedFeatureUsed"|"ConflictingBrowsingInstance"|"CacheFlushed"|"ServiceWorkerVersionActivation"|"SessionRestored"|"ServiceWorkerPostMessage"|"EnteredBackForwardCacheBeforeServiceWorkerHostAdded"|"RenderFrameHostReused_SameSite"|"RenderFrameHostReused_CrossSite"|"ServiceWorkerClaim"|"IgnoreEventAndEvict"|"HaveInnerContents"|"TimeoutPuttingInCache"|"BackForwardCacheDisabledByLowMemory"|"BackForwardCacheDisabledByCommandLine"|"NetworkRequestDatapipeDrainedAsBytesConsumer"|"NetworkRequestRedirected"|"NetworkRequestTimeout"|"NetworkExceedsBufferLimit"|"NavigationCancelledWhileRestoring"|"NotMostRecentNavigationEntry"|"BackForwardCacheDisabledForPrerender"|"UserAgentOverrideDiffers"|"ForegroundCacheLimit"|"BrowsingInstanceNotSwapped"|"BackForwardCacheDisabledForDelegate"|"OptInUnloadHeaderNotPresent"|"UnloadHandlerExistsInSubFrame"|"ServiceWorkerUnregistration"|"WebSocket"|"WebRTC"|"MainResourceHasCacheControlNoStore"|"MainResourceHasCacheControlNoCache"|"SubresourceHasCacheControlNoStore"|"SubresourceHasCacheControlNoCache"|"ContainsPlugins"|"DocumentLoaded"|"DedicatedWorkerOrWorklet"|"OutstandingNetworkRequestOthers"|"OutstandingIndexedDBTransaction"|"RequestedGeolocationPermission"|"RequestedNotificationsPermission"|"RequestedMIDIPermission"|"RequestedAudioCapturePermission"|"RequestedVideoCapturePermission"|"RequestedBackForwardCacheBlockedSensors"|"RequestedBackgroundWorkPermission"|"BroadcastChannel"|"IndexedDBConnection"|"WebXR"|"SharedWorker"|"WebLocks"|"WebHID"|"WebShare"|"RequestedStorageAccessGrant"|"WebNfc"|"WebFileSystem"|"OutstandingNetworkRequestFetch"|"OutstandingNetworkRequestXHR"|"AppBanner"|"Printing"|"WebDatabase"|"PictureInPicture"|"Portal"|"SpeechRecognizer"|"IdleManager"|"PaymentManager"|"SpeechSynthesis"|"KeyboardLock"|"WebOTPService"|"OutstandingNetworkRequestDirectSocket"|"IsolatedWorldScript"|"InjectedStyleSheet"|"MediaSessionImplOnServiceCreated"|"Unknown";
     /**
      * Types of not restored reasons for back-forward cache.
      */
@@ -10582,7 +10645,7 @@ to false.
       /**
        * Image compression format (defaults to png).
        */
-      format?: "jpeg"|"png";
+      format?: "jpeg"|"png"|"webp";
       /**
        * Compression quality from range [0..100] (jpeg only).
        */
@@ -15815,7 +15878,7 @@ execution.
        */
       executionContextId?: ExecutionContextId;
       /**
-       * Dictionary with entries of meta deta that the client associated
+       * Dictionary with entries of meta data that the client associated
 with this exception, such as information about associated network
 requests, etc.
        */
@@ -16870,6 +16933,8 @@ unsubscribes current runtime agent from Runtime.bindingCalled notifications.
     "Input.dispatchDragEvent": Input.dispatchDragEventParameters;
     "Input.dispatchKeyEvent": Input.dispatchKeyEventParameters;
     "Input.insertText": Input.insertTextParameters;
+    "Input.imeSetComposition": Input.imeSetCompositionParameters;
+    "Input.imeCommitComposition": Input.imeCommitCompositionParameters;
     "Input.dispatchMouseEvent": Input.dispatchMouseEventParameters;
     "Input.dispatchTouchEvent": Input.dispatchTouchEventParameters;
     "Input.emulateTouchFromMouseEvent": Input.emulateTouchFromMouseEventParameters;
@@ -17387,6 +17452,8 @@ unsubscribes current runtime agent from Runtime.bindingCalled notifications.
     "Input.dispatchDragEvent": Input.dispatchDragEventReturnValue;
     "Input.dispatchKeyEvent": Input.dispatchKeyEventReturnValue;
     "Input.insertText": Input.insertTextReturnValue;
+    "Input.imeSetComposition": Input.imeSetCompositionReturnValue;
+    "Input.imeCommitComposition": Input.imeCommitCompositionReturnValue;
     "Input.dispatchMouseEvent": Input.dispatchMouseEventReturnValue;
     "Input.dispatchTouchEvent": Input.dispatchTouchEventReturnValue;
     "Input.emulateTouchFromMouseEvent": Input.emulateTouchFromMouseEventReturnValue;
